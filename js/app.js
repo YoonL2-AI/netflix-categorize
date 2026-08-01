@@ -35,11 +35,11 @@ async function init() {
 }
 
 function renderCategories() {
-  const categories = ["전체", ...new Set(state.items.map((i) => i.category))];
+  const categories = ["전체", ...new Set(state.items.map((i) => i.category)), "19금"];
   els.nav.innerHTML = "";
   categories.forEach((cat) => {
     const btn = document.createElement("button");
-    btn.className = "chip" + (cat === state.category ? " active" : "");
+    btn.className = "chip" + (cat === state.category ? " active" : "") + (cat === "19금" ? " chip-mature" : "");
     btn.textContent = cat;
     btn.addEventListener("click", () => {
       state.category = cat;
@@ -52,7 +52,9 @@ function renderCategories() {
 
 function getFiltered() {
   return state.items.filter((item) => {
-    const matchesCategory = state.category === "전체" || item.category === state.category;
+    const matchesCategory =
+      state.category === "전체" ||
+      (state.category === "19금" ? item.mature === true : item.category === state.category);
     const matchesQuery =
       !state.query ||
       item.title.toLowerCase().includes(state.query) ||
@@ -71,7 +73,10 @@ function render() {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <div class="card-poster" style="background:${item.color}">${item.title}</div>
+      <div class="card-poster" style="background:${item.color}">
+        ${item.mature ? '<span class="badge badge-mature">19</span>' : ""}
+        ${item.title}
+      </div>
       <div class="card-info">
         <p class="card-title">${item.title}</p>
         <div class="card-meta">
@@ -93,6 +98,7 @@ function openModal(item) {
     </div>
     <div class="modal-body">
       <div class="meta-row">
+        ${item.mature ? '<span class="badge badge-mature">19</span>' : ""}
         <span class="badge">${item.category}</span>
         <span>${item.year}</span>
         <span>★ ${item.rating.toFixed(1)}</span>

@@ -88,6 +88,22 @@ body {
   font-weight: 600;
 }
 
+.chip-mature {
+  border-color: #5a1010;
+  color: #e58a8a;
+}
+
+.chip-mature:hover {
+  border-color: var(--red);
+  color: #fff;
+}
+
+.chip-mature.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
 .content-area {
   max-width: 1400px;
   margin: 0 auto;
@@ -121,6 +137,7 @@ body {
 }
 
 .card-poster {
+  position: relative;
   height: 240px;
   display: flex;
   align-items: center;
@@ -131,6 +148,16 @@ body {
   font-size: 17px;
   color: #fff;
   text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.badge-mature {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--red);
+  color: #fff;
+  font-weight: 800;
+  padding: 2px 7px;
 }
 
 .card-info {
