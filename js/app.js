@@ -195,13 +195,29 @@ const TAXONOMY = [
     ],
   },
   {
-    id: "mature", label: "19금",
+    id: "mature", label: "성인 등급",
     mids: [
-      { id: "mature-all", label: "19금", special: "certification", note: "영화만 · 국가별 등급 기준",
+      { id: "mature-all", label: "성인 등급", special: "certification", note: "영화만 · 국가별 청소년 관람불가 등급 기준",
         leaves: [{ id: "all", label: "전체" }] },
     ],
   },
 ];
+
+// 모달 상세 설명(줄거리/제목/장르명)을 조회할 때 쓸 TMDB 언어 코드 목록.
+// TMDB는 이 언어로 로컬라이즈된 title/overview/genre 이름을 응답에 그대로 담아준다.
+const LANGUAGES = [
+  { code: "ko-KR", label: "한국어" },
+  { code: "en-US", label: "English" },
+  { code: "ja-JP", label: "日本語" },
+  { code: "zh-CN", label: "中文(简体)" },
+  { code: "es-ES", label: "Español" },
+  { code: "fr-FR", label: "Français" },
+  { code: "de-DE", label: "Deutsch" },
+  { code: "pt-BR", label: "Português" },
+  { code: "vi-VN", label: "Tiếng Việt" },
+  { code: "id-ID", label: "Bahasa Indonesia" },
+];
+const LANG_STORAGE_KEY = "tmdb_language";
 
 // TMDB discover/movie의 certification 필터는 국가별 등급 표기를 그대로 써야 해서,
 // 주요 국가의 "청소년 관람불가"에 해당하는 등급 문자열을 매핑해둔다.
@@ -214,6 +230,7 @@ const state = {
   apiKey: localStorage.getItem(STORAGE_KEY) || "",
   region: "KR",
   regions: [],
+  language: localStorage.getItem(LANG_STORAGE_KEY) || "ko-KR",
   major: TAXONOMY[0],
   mid: TAXONOMY[0].mids[0],
   leaf: TAXONOMY[0].mids[0].leaves[0],
@@ -226,6 +243,7 @@ const state = {
 
 const els = {
   regionSelect: document.getElementById("regionSelect"),
+  languageSelect: document.getElementById("languageSelect"),
   searchInput: document.getElementById("searchInput"),
   settingsBtn: document.getElementById("settingsBtn"),
   majorNav: document.getElementById("majorNav"),
@@ -348,6 +366,24 @@ els.regionSelect.addEventListener("change", (e) => {
   state.region = e.target.value;
   state.page = 1;
   loadCategory();
+});
+
+// ---------- 언어 선택 (모달 상세 설명 번역) ----------
+
+function renderLanguageOptions() {
+  els.languageSelect.innerHTML = "";
+  LANGUAGES.forEach((lang) => {
+    const opt = document.createElement("option");
+    opt.value = lang.code;
+    opt.textContent = lang.label;
+    if (lang.code === state.language) opt.selected = true;
+    els.languageSelect.appendChild(opt);
+  });
+}
+
+els.languageSelect.addEventListener("change", (e) => {
+  state.language = e.target.value;
+  localStorage.setItem(LANG_STORAGE_KEY, state.language);
 });
 
 // ---------- 카테고리 (대분류 > 중분류 > 소분류) ----------
@@ -613,9 +649,21 @@ async function openModal(item) {
 
   try {
     const [detail, providers] = await Promise.all([
-      tmdbFetch(`/${item.media_type}/${item.id}`),
+      tmdbFetch(`/${item.media_type}/${item.id}`, { language: state.language }),
       tmdbFetch(`/${item.media_type}/${item.id}/watch/providers`),
     ]);
+
+    let overview = detail.overview;
+    let overviewIsFallback = false;
+    if (!overview && state.language !== "en-US") {
+      try {
+        const fallback = await tmdbFetch(`/${item.media_type}/${item.id}`, { language: "en-US" });
+        overview = fallback.overview;
+        overviewIsFallback = true;
+      } catch {
+        // 폴백 실패 시 빈 설명으로 둔다.
+      }
+    }
 
     const genres = (detail.genres || []).map((g) => g.name).join(", ") || "-";
     const year = (detail.release_date || detail.first_air_date || "").slice(0, 4) || "-";
@@ -645,7 +693,8 @@ async function openModal(item) {
           <span>${runtime}</span>
         </div>
         <p class="modal-genres">${escapeHtml(genres)}</p>
-        <p class="desc">${escapeHtml(detail.overview) || "줄거리 정보가 없습니다."}</p>
+        ${overviewIsFallback ? '<p class="overview-fallback-note">선택한 언어로 된 줄거리가 없어 영어 원문을 보여드려요.</p>' : ""}
+        <p class="desc">${escapeHtml(overview) || "줄거리 정보가 없습니다."}</p>
         <div class="availability">
           <p class="availability-title">
             넷플릭스 제공 국가 ${netflixCountries.length ? `(${netflixCountries.length}개국)` : ""}
@@ -699,6 +748,7 @@ async function bootstrap() {
     openApiKeyModal();
     return;
   }
+  renderLanguageOptions();
   renderMajorChips();
   renderMidChips();
   renderLeafChips();
