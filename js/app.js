@@ -378,6 +378,7 @@ const state = {
   page: 1,
   hasMore: false,
   items: [],
+  totalResults: 0,
   loading: false,
 };
 
@@ -694,6 +695,7 @@ async function loadCategory() {
   if (!requests.length) {
     state.items = state.page === 1 ? [] : state.items;
     state.hasMore = false;
+    state.totalResults = 0;
     const mediaMismatch = resolveMedia(state.mid, state.mediaFilter) === null;
     showStatus(
       mediaMismatch
@@ -722,6 +724,7 @@ async function loadCategory() {
 
     const maxTotalPages = Math.max(0, ...results.map((r) => r.data.total_pages || 0));
     state.hasMore = state.page < maxTotalPages;
+    state.totalResults = results.reduce((sum, r) => sum + (r.data.total_results || 0), 0);
 
     if (state.page === 1) {
       state.items = fetched;
@@ -772,10 +775,18 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function resultCountLabel(filteredCount) {
+  if (state.query) return `검색 결과 ${filteredCount}개 (불러온 목록 내)`;
+  if (!state.totalResults) return "";
+  if (state.items.length >= state.totalResults) {
+    return `총 ${state.totalResults.toLocaleString()}개`;
+  }
+  return `총 ${state.totalResults.toLocaleString()}개 중 ${state.items.length.toLocaleString()}개 불러옴`;
+}
+
 function render() {
   const filtered = getFiltered();
-  const countLabel = state.query ? `검색 결과 ${filtered.length}개` : `${filtered.length}개의 콘텐츠`;
-  els.resultCount.textContent = state.items.length ? countLabel : "";
+  els.resultCount.textContent = state.items.length ? resultCountLabel(filtered.length) : "";
   els.grid.innerHTML = "";
   els.emptyMsg.hidden = state.loading || filtered.length !== 0;
   els.loadMoreBtn.hidden = state.query !== "" || !state.hasMore;
