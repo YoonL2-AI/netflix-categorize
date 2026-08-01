@@ -179,6 +179,10 @@ body {
   padding: 20px;
 }
 
+.modal-overlay[hidden] {
+  display: none;
+}
+
 .modal {
   background: var(--bg-elevated);
   max-width: 480px;
