@@ -404,16 +404,24 @@ const els = {
   apiKeySave: document.getElementById("apiKeySave"),
 };
 
-const regionDisplayNames = (() => {
-  try {
-    return new Intl.DisplayNames(["ko"], { type: "region" });
-  } catch {
-    return null;
-  }
-})();
+const regionDisplayNamesCache = new Map();
 
+function getRegionDisplayNames(langKey) {
+  if (regionDisplayNamesCache.has(langKey)) return regionDisplayNamesCache.get(langKey);
+  let inst = null;
+  try {
+    inst = new Intl.DisplayNames([langKey], { type: "region" });
+  } catch {
+    inst = null;
+  }
+  regionDisplayNamesCache.set(langKey, inst);
+  return inst;
+}
+
+// 국가 이름을 현재 선택된 화면 언어(Languages)로 표시한다.
 function regionLabel(code, englishFallback) {
-  const localized = regionDisplayNames ? regionDisplayNames.of(code) : null;
+  const inst = getRegionDisplayNames(langKeyOf(state.language));
+  const localized = inst ? inst.of(code) : null;
   return localized || englishFallback || code;
 }
 
@@ -490,15 +498,22 @@ els.apiKeySave.addEventListener("click", async () => {
 
 async function loadRegions() {
   const data = await tmdbFetch("/watch/providers/regions");
-  state.regions = (data.results || [])
-    .map((r) => ({ code: r.iso_3166_1, label: regionLabel(r.iso_3166_1, r.english_name) }))
-    .sort((a, b) => a.label.localeCompare(b.label, "ko"));
+  state.regions = (data.results || []).map((r) => ({ code: r.iso_3166_1, englishName: r.english_name }));
+  renderRegionOptions();
+}
+
+// 국가 목록을 다시 조회하지 않고, 현재 Languages 설정에 맞춰 표시 이름만 새로 그린다.
+function renderRegionOptions() {
+  const lk = langKeyOf(state.language);
+  const sorted = [...state.regions].sort((a, b) =>
+    regionLabel(a.code, a.englishName).localeCompare(regionLabel(b.code, b.englishName), lk)
+  );
 
   els.regionSelect.innerHTML = "";
-  state.regions.forEach((r) => {
+  sorted.forEach((r) => {
     const opt = document.createElement("option");
     opt.value = r.code;
-    opt.textContent = `${r.label} (${r.code})`;
+    opt.textContent = `${regionLabel(r.code, r.englishName)} (${r.code})`;
     if (r.code === state.region) opt.selected = true;
     els.regionSelect.appendChild(opt);
   });
@@ -552,6 +567,7 @@ els.languageSelect.addEventListener("change", (e) => {
   state.language = e.target.value;
   localStorage.setItem(LANG_STORAGE_KEY, state.language);
   state.page = 1;
+  renderRegionOptions();
   renderMajorChips();
   renderMidChips();
   renderLeafChips();
