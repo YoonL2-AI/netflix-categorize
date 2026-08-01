@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>카테고리별 넷플릭스 콘텐츠 찾기</title>
-<link rel="stylesheet" href="css/style.css?v=5" />
+<link rel="stylesheet" href="css/style.css?v=6" />
 </head>
 <body>
   <header class="header">
@@ -76,10 +76,22 @@
         <input type="password" id="apiKeyInput" class="api-key-input" placeholder="TMDB API Read Access Token 붙여넣기" />
         <p class="api-key-error" id="apiKeyError" hidden></p>
         <button class="api-key-save" id="apiKeySave">저장하고 시작하기</button>
+
+        <div class="api-key-transfer" id="apiKeyTransfer" hidden>
+          <hr class="api-key-divider" />
+          <p class="api-key-transfer-title">다른 기기에서도 쓰고 싶다면</p>
+          <p class="api-key-transfer-desc">
+            이 키가 담긴 링크를 만들어서 본인만 보는 메모나 메신저로 보내두면, 그 기기에서
+            링크를 열기만 해도 자동으로 키가 설정됩니다. 링크에 키가 그대로 들어있으니
+            다른 사람과는 공유하지 마세요.
+          </p>
+          <button class="api-key-transfer-btn" id="apiKeyTransferBtn">이 기기의 키로 링크 복사하기</button>
+          <p class="api-key-transfer-status" id="apiKeyTransferStatus" hidden></p>
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="js/app.js?v=5"></script>
+  <script src="js/app.js?v=6"></script>
 </body>
 </html>

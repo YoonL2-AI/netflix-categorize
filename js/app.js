@@ -358,6 +358,162 @@ function mediaFilterLabel(id, koreanFallback) {
   return MEDIA_FILTER_I18N[id]?.[lk] || koreanFallback;
 }
 
+// ---------- 화면 문구(칩/모달/상태 메시지 등) 다국어 사전 ----------
+// 카테고리 이름과 별개로, 카드·모달·상태 메시지에 쓰이는 UI 문자열도 Languages를
+// 따라가도록 여기 모아둔다. ko 값은 기존 한국어 문구를 그대로 기본값으로 쓴다.
+const UI_I18N = {
+  movie: { ko: "영화", en: "Movie", ja: "映画", zh: "电影", es: "Película", fr: "Film", de: "Film", pt: "Filme", vi: "Phim điện ảnh", id: "Film" },
+  series: { ko: "시리즈", en: "Series", ja: "シリーズ", zh: "剧集", es: "Serie", fr: "Série", de: "Serie", pt: "Série", vi: "Phim bộ", id: "Serial" },
+  close: { ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭", es: "Cerrar", fr: "Fermer", de: "Schließen", pt: "Fechar", vi: "Đóng", id: "Tutup" },
+  loading: { ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中...", es: "Cargando...", fr: "Chargement...", de: "Wird geladen...", pt: "Carregando...", vi: "Đang tải...", id: "Memuat..." },
+  loadMore: { ko: "더 보기", en: "Load More", ja: "もっと見る", zh: "加载更多", es: "Cargar más", fr: "Charger plus", de: "Mehr laden", pt: "Carregar mais", vi: "Tải thêm", id: "Muat Lagi" },
+  emptyResults: { ko: "조건에 맞는 콘텐츠가 없습니다.", en: "No content matches your filters.", ja: "条件に合うコンテンツがありません。", zh: "没有符合条件的内容。", es: "No hay contenido que coincida con los filtros.", fr: "Aucun contenu ne correspond aux filtres.", de: "Keine Inhalte gefunden, die den Filtern entsprechen.", pt: "Nenhum conteúdo corresponde aos filtros.", vi: "Không có nội dung phù hợp với bộ lọc.", id: "Tidak ada konten yang sesuai dengan filter." },
+  searchPlaceholder: { ko: "불러온 목록 내에서 검색...", en: "Search within loaded list...", ja: "読み込み済みリスト内で検索...", zh: "在已加载列表中搜索...", es: "Buscar en la lista cargada...", fr: "Rechercher dans la liste chargée...", de: "In geladener Liste suchen...", pt: "Pesquisar na lista carregada...", vi: "Tìm trong danh sách đã tải...", id: "Cari dalam daftar yang dimuat..." },
+  noOverview: { ko: "줄거리 정보가 없습니다.", en: "No synopsis available.", ja: "あらすじ情報がありません。", zh: "暂无简介。", es: "No hay sinopsis disponible.", fr: "Aucun synopsis disponible.", de: "Keine Beschreibung verfügbar.", pt: "Nenhuma sinopse disponível.", vi: "Không có tóm tắt.", id: "Sinopsis tidak tersedia." },
+  overviewFallbackNote: { ko: "선택한 언어로 된 줄거리가 없어 영어 원문을 보여드려요.", en: "No synopsis in the selected language, showing the English version.", ja: "選択した言語のあらすじがないため、英語版を表示しています。", zh: "没有所选语言的简介,显示英文版本。", es: "No hay sinopsis en el idioma seleccionado; se muestra la versión en inglés.", fr: "Aucun synopsis dans la langue sélectionnée, affichage de la version anglaise.", de: "Keine Beschreibung in der gewählten Sprache, englische Version wird angezeigt.", pt: "Não há sinopse no idioma selecionado; exibindo a versão em inglês.", vi: "Không có tóm tắt bằng ngôn ngữ đã chọn, hiển thị bản tiếng Anh.", id: "Tidak ada sinopsis dalam bahasa yang dipilih, menampilkan versi bahasa Inggris." },
+  noCountryData: { ko: "현재 TMDB 데이터 기준으로 넷플릭스 제공 국가 정보가 없습니다.", en: "No Netflix availability data for this title yet.", ja: "この作品のNetflix配信国データはまだありません。", zh: "暂无该作品的Netflix提供国数据。", es: "Aún no hay datos de disponibilidad en Netflix para este título.", fr: "Aucune donnée de disponibilité Netflix pour ce titre pour l'instant.", de: "Noch keine Netflix-Verfügbarkeitsdaten für diesen Titel.", pt: "Ainda não há dados de disponibilidade na Netflix para este título.", vi: "Chưa có dữ liệu về quốc gia phát hành trên Netflix cho tựa này.", id: "Belum ada data ketersediaan Netflix untuk judul ini." },
+  detailLoadFailed: { ko: "상세 정보를 불러오지 못했습니다", en: "Failed to load details", ja: "詳細情報を読み込めませんでした", zh: "无法加载详情", es: "No se pudieron cargar los detalles", fr: "Échec du chargement des détails", de: "Details konnten nicht geladen werden", pt: "Falha ao carregar detalhes", vi: "Không tải được thông tin chi tiết", id: "Gagal memuat detail" },
+  listLoadFailed: { ko: "불러오기 실패", en: "Failed to load", ja: "読み込みに失敗しました", zh: "加载失败", es: "Error al cargar", fr: "Échec du chargement", de: "Laden fehlgeschlagen", pt: "Falha ao carregar", vi: "Tải thất bại", id: "Gagal memuat" },
+  netflixCountriesLabel: { ko: "넷플릭스 제공 국가", en: "Available on Netflix in", ja: "Netflix配信国", zh: "Netflix提供国", es: "Disponible en Netflix en", fr: "Disponible sur Netflix dans", de: "Auf Netflix verfügbar in", pt: "Disponível na Netflix em", vi: "Có trên Netflix tại", id: "Tersedia di Netflix di" },
+};
+
+function ui(key) {
+  const lk = langKeyOf(state.language);
+  return UI_I18N[key]?.[lk] || UI_I18N[key]?.ko || key;
+}
+
+function formatRuntime(minutes) {
+  const lk = langKeyOf(state.language);
+  switch (lk) {
+    case "en": return `${minutes} min`;
+    case "ja": return `${minutes}分`;
+    case "zh": return `${minutes}分钟`;
+    case "es": return `${minutes} min`;
+    case "fr": return `${minutes} min`;
+    case "de": return `${minutes} Min.`;
+    case "pt": return `${minutes} min`;
+    case "vi": return `${minutes} phút`;
+    case "id": return `${minutes} menit`;
+    default: return `${minutes}분`;
+  }
+}
+
+function formatSeasonsEpisodes(seasons, episodes) {
+  const lk = langKeyOf(state.language);
+  switch (lk) {
+    case "en": return `${seasons} season(s) · ${episodes} episodes`;
+    case "ja": return `シーズン${seasons} · 全${episodes}話`;
+    case "zh": return `${seasons}季 · 共${episodes}集`;
+    case "es": return `${seasons} temporada(s) · ${episodes} episodios`;
+    case "fr": return `${seasons} saison(s) · ${episodes} épisodes`;
+    case "de": return `${seasons} Staffel(n) · ${episodes} Folgen`;
+    case "pt": return `${seasons} temporada(s) · ${episodes} episódios`;
+    case "vi": return `${seasons} mùa · ${episodes} tập`;
+    case "id": return `${seasons} musim · ${episodes} episode`;
+    default: return `시즌 ${seasons}개 · 총 ${episodes}화`;
+  }
+}
+
+function formatNetflixCountriesTitle(count) {
+  const lk = langKeyOf(state.language);
+  if (!count) return ui("netflixCountriesLabel");
+  switch (lk) {
+    case "en": return `${ui("netflixCountriesLabel")} ${count} countries`;
+    case "ja": return `${ui("netflixCountriesLabel")} (${count}か国)`;
+    case "zh": return `${ui("netflixCountriesLabel")} (${count}个国家/地区)`;
+    case "es": return `${ui("netflixCountriesLabel")} ${count} países`;
+    case "fr": return `${ui("netflixCountriesLabel")} ${count} pays`;
+    case "de": return `${ui("netflixCountriesLabel")} ${count} Ländern`;
+    case "pt": return `${ui("netflixCountriesLabel")} ${count} países`;
+    case "vi": return `${ui("netflixCountriesLabel")} ${count} quốc gia`;
+    case "id": return `${ui("netflixCountriesLabel")} ${count} negara`;
+    default: return `${ui("netflixCountriesLabel")} (${count}개국)`;
+  }
+}
+
+function formatSearchResultCount(n) {
+  const lk = langKeyOf(state.language);
+  switch (lk) {
+    case "en": return `${n} search results (within loaded list)`;
+    case "ja": return `検索結果 ${n}件(読み込み済み内)`;
+    case "zh": return `搜索结果 ${n}个(已加载列表内)`;
+    case "es": return `${n} resultados de búsqueda (en la lista cargada)`;
+    case "fr": return `${n} résultats de recherche (dans la liste chargée)`;
+    case "de": return `${n} Suchergebnisse (in geladener Liste)`;
+    case "pt": return `${n} resultados de busca (na lista carregada)`;
+    case "vi": return `${n} kết quả tìm kiếm (trong danh sách đã tải)`;
+    case "id": return `${n} hasil pencarian (dalam daftar yang dimuat)`;
+    default: return `검색 결과 ${n}개 (불러온 목록 내)`;
+  }
+}
+
+function formatTotalOnly(total) {
+  const t = total.toLocaleString();
+  const lk = langKeyOf(state.language);
+  switch (lk) {
+    case "en": return `${t} total`;
+    case "ja": return `合計${t}件`;
+    case "zh": return `共${t}个`;
+    case "es": return `${t} en total`;
+    case "fr": return `${t} au total`;
+    case "de": return `${t} insgesamt`;
+    case "pt": return `${t} no total`;
+    case "vi": return `Tổng ${t}`;
+    case "id": return `Total ${t}`;
+    default: return `총 ${t}개`;
+  }
+}
+
+function formatTotalPartial(total, loaded) {
+  const t = total.toLocaleString();
+  const l = loaded.toLocaleString();
+  const lk = langKeyOf(state.language);
+  switch (lk) {
+    case "en": return `${t} total · ${l} loaded`;
+    case "ja": return `合計${t}件中 ${l}件読み込み済み`;
+    case "zh": return `共${t}个 · 已加载${l}个`;
+    case "es": return `${t} en total · ${l} cargados`;
+    case "fr": return `${t} au total · ${l} chargés`;
+    case "de": return `${t} insgesamt · ${l} geladen`;
+    case "pt": return `${t} no total · ${l} carregados`;
+    case "vi": return `Tổng ${t} · Đã tải ${l}`;
+    case "id": return `Total ${t} · Dimuat ${l}`;
+    default: return `총 ${t}개 중 ${l}개 불러옴`;
+  }
+}
+
+function formatMediaMismatch() {
+  const lk = langKeyOf(state.language);
+  switch (lk) {
+    case "en": return "This category doesn't offer the content type you selected (movies/series).";
+    case "ja": return "このカテゴリーでは選択したコンテンツタイプ(映画/シリーズ)を提供していません。";
+    case "zh": return "该分类不提供您选择的内容类型(电影/剧集)。";
+    case "es": return "Esta categoría no ofrece el tipo de contenido seleccionado (películas/series).";
+    case "fr": return "Cette catégorie ne propose pas le type de contenu sélectionné (films/séries).";
+    case "de": return "Diese Kategorie bietet den ausgewählten Inhaltstyp (Filme/Serien) nicht an.";
+    case "pt": return "Esta categoria não oferece o tipo de conteúdo selecionado (filmes/séries).";
+    case "vi": return "Danh mục này không cung cấp loại nội dung bạn chọn (phim điện ảnh/phim bộ).";
+    case "id": return "Kategori ini tidak menyediakan jenis konten yang Anda pilih (film/serial).";
+    default: return "이 카테고리는 선택하신 콘텐츠 유형(영화/시리즈)을 제공하지 않아요.";
+  }
+}
+
+function formatCertUnsupported(region) {
+  const lk = langKeyOf(state.language);
+  switch (lk) {
+    case "en": return `Rating filters aren't supported in ${region}.`;
+    case "ja": return `${region}ではこのカテゴリーの年齢制限フィルターに対応していません。`;
+    case "zh": return `${region}不支持该分类的分级筛选。`;
+    case "es": return `Los filtros de clasificación no están disponibles en ${region}.`;
+    case "fr": return `Les filtres de classification ne sont pas pris en charge en ${region}.`;
+    case "de": return `Altersfreigabe-Filter werden in ${region} nicht unterstützt.`;
+    case "pt": return `Os filtros de classificação não são compatíveis em ${region}.`;
+    case "vi": return `Bộ lọc xếp hạng không được hỗ trợ tại ${region}.`;
+    case "id": return `Filter rating tidak didukung di ${region}.`;
+    default: return `${region}에서는 이 카테고리의 등급 필터를 지원하지 않아요.`;
+  }
+}
+
 // TMDB discover/movie의 certification 필터는 국가별 등급 표기를 그대로 써야 해서,
 // 주요 국가의 "청소년 관람불가"에 해당하는 등급 문자열을 매핑해둔다.
 const MATURE_CERT_BY_REGION = {
@@ -402,6 +558,9 @@ const els = {
   apiKeyInput: document.getElementById("apiKeyInput"),
   apiKeyError: document.getElementById("apiKeyError"),
   apiKeySave: document.getElementById("apiKeySave"),
+  apiKeyTransfer: document.getElementById("apiKeyTransfer"),
+  apiKeyTransferBtn: document.getElementById("apiKeyTransferBtn"),
+  apiKeyTransferStatus: document.getElementById("apiKeyTransferStatus"),
 };
 
 const regionDisplayNamesCache = new Map();
@@ -460,7 +619,34 @@ function openApiKeyModal(errorMsg) {
   els.apiKeyInput.value = state.apiKey || "";
   els.apiKeyError.hidden = !errorMsg;
   if (errorMsg) els.apiKeyError.textContent = errorMsg;
+  els.apiKeyTransfer.hidden = !state.apiKey;
+  els.apiKeyTransferStatus.hidden = true;
   els.apiKeyOverlay.hidden = false;
+}
+
+// 다른 기기로 키를 옮기기 위한 링크. URL 프래그먼트(#key=...)는 서버로 전송되지
+// 않고 브라우저 안에만 남기 때문에, 쿼리스트링으로 넘기는 것보다 안전하다.
+els.apiKeyTransferBtn.addEventListener("click", async () => {
+  const link = `${location.origin}${location.pathname}#key=${encodeURIComponent(state.apiKey)}`;
+  try {
+    await navigator.clipboard.writeText(link);
+    els.apiKeyTransferStatus.textContent = "링크를 복사했어요. 본인만 보는 곳에 붙여넣어 두세요.";
+  } catch {
+    window.prompt("아래 링크를 복사하세요:", link);
+    els.apiKeyTransferStatus.textContent = "";
+  }
+  els.apiKeyTransferStatus.hidden = false;
+});
+
+// 링크의 #key=... 프래그먼트로 들어온 API 키를 저장하고, 주소창에서 즉시 지운다.
+function consumeApiKeyFromUrlFragment() {
+  const hash = location.hash;
+  if (!hash.startsWith("#key=")) return;
+  const key = decodeURIComponent(hash.slice("#key=".length));
+  history.replaceState(null, "", location.pathname + location.search);
+  if (!key) return;
+  state.apiKey = key;
+  localStorage.setItem(STORAGE_KEY, key);
 }
 
 function closeApiKeyModal() {
@@ -540,6 +726,14 @@ function renderMediaFilterLabels() {
   document.getElementById("mediaTvLabel").textContent = mediaFilterLabel("media-tv", "시리즈만");
 }
 
+// 정적 마크업에 박혀 있던 한국어 문구(검색창 placeholder, 빈 결과 안내, 더보기 버튼)도
+// Languages 설정을 따라가도록 매번 다시 그려준다.
+function renderStaticUiText() {
+  els.searchInput.placeholder = ui("searchPlaceholder");
+  els.emptyMsg.textContent = ui("emptyResults");
+  els.loadMoreBtn.textContent = ui("loadMore");
+}
+
 // mid가 지원하는 미디어 타입과 사용자가 고른 필터를 합쳐서 실제 조회할 타입을 정한다.
 // 둘이 겹치지 않으면(예: 공포 카테고리는 영화만 있는데 "시리즈만" 선택) null을 반환.
 function resolveMedia(mid, filter) {
@@ -572,6 +766,8 @@ els.languageSelect.addEventListener("change", (e) => {
   renderMidChips();
   renderLeafChips();
   renderMediaFilterLabels();
+  renderStaticUiText();
+  render(); // 결과 개수 라벨(총 N개 등)도 즉시 새 언어로 다시 그린다
   loadCategory();
 });
 
@@ -703,7 +899,7 @@ async function buildDiscoverRequests(mid, leaf, region, page) {
 async function loadCategory() {
   if (!state.apiKey) return;
   state.loading = true;
-  showStatus("불러오는 중...");
+  showStatus(ui("loading"));
   els.loadMoreBtn.hidden = true;
 
   const requests = await buildDiscoverRequests(state.mid, state.leaf, state.region, state.page);
@@ -713,11 +909,7 @@ async function loadCategory() {
     state.hasMore = false;
     state.totalResults = 0;
     const mediaMismatch = resolveMedia(state.mid, state.mediaFilter) === null;
-    showStatus(
-      mediaMismatch
-        ? "이 카테고리는 선택하신 콘텐츠 유형(영화/시리즈)을 제공하지 않아요."
-        : `${regionLabel(state.region)}에서는 이 카테고리의 등급 필터를 지원하지 않아요.`
-    );
+    showStatus(mediaMismatch ? formatMediaMismatch() : formatCertUnsupported(regionLabel(state.region)));
     render();
     state.loading = false;
     return;
@@ -759,7 +951,7 @@ async function loadCategory() {
     if (e.code === "UNAUTHORIZED") {
       openApiKeyModal("키가 만료되었거나 올바르지 않습니다. 다시 입력해주세요.");
     }
-    showStatus(`불러오기 실패: ${e.message}`);
+    showStatus(`${ui("listLoadFailed")}: ${e.message}`);
   }
 
   state.loading = false;
@@ -792,12 +984,10 @@ function escapeHtml(str) {
 }
 
 function resultCountLabel(filteredCount) {
-  if (state.query) return `검색 결과 ${filteredCount}개 (불러온 목록 내)`;
+  if (state.query) return formatSearchResultCount(filteredCount);
   if (!state.totalResults) return "";
-  if (state.items.length >= state.totalResults) {
-    return `총 ${state.totalResults.toLocaleString()}개`;
-  }
-  return `총 ${state.totalResults.toLocaleString()}개 중 ${state.items.length.toLocaleString()}개 불러옴`;
+  if (state.items.length >= state.totalResults) return formatTotalOnly(state.totalResults);
+  return formatTotalPartial(state.totalResults, state.items.length);
 }
 
 function render() {
@@ -811,7 +1001,7 @@ function render() {
     const title = item.title || item.name || "";
     const year = (item.release_date || item.first_air_date || "").slice(0, 4);
     const rating = typeof item.vote_average === "number" ? item.vote_average.toFixed(1) : "-";
-    const typeLabel = item.media_type === "tv" ? "시리즈" : "영화";
+    const typeLabel = item.media_type === "tv" ? ui("series") : ui("movie");
 
     const card = document.createElement("div");
     card.className = "card";
@@ -840,15 +1030,15 @@ function render() {
 // ---------- 상세 모달 ----------
 
 async function openModal(item) {
-  const typeLabel = item.media_type === "tv" ? "시리즈" : "영화";
+  const typeLabel = item.media_type === "tv" ? ui("series") : ui("movie");
   els.modal.innerHTML = `
     <div class="modal-hero" style="background-image:${item.backdrop_path ? `url(${BACKDROP_BASE}${item.backdrop_path})` : "none"}">
       <div class="modal-hero-scrim"></div>
       <span class="modal-hero-title">${escapeHtml(item.title || item.name)}</span>
-      <button class="modal-close" id="modalClose" aria-label="닫기">&times;</button>
+      <button class="modal-close" id="modalClose" aria-label="${ui("close")}">&times;</button>
     </div>
     <div class="modal-body">
-      <div class="meta-row"><span class="badge">${typeLabel}</span><span>불러오는 중...</span></div>
+      <div class="meta-row"><span class="badge">${typeLabel}</span><span>${ui("loading")}</span></div>
     </div>
   `;
   els.modalOverlay.hidden = false;
@@ -875,22 +1065,22 @@ async function openModal(item) {
     const genres = (detail.genres || []).map((g) => g.name).join(", ") || "-";
     const year = (detail.release_date || detail.first_air_date || "").slice(0, 4) || "-";
     const runtime = detail.runtime
-      ? `${detail.runtime}분`
+      ? formatRuntime(detail.runtime)
       : detail.number_of_seasons
-      ? `시즌 ${detail.number_of_seasons}개 · 총 ${detail.number_of_episodes}화`
+      ? formatSeasonsEpisodes(detail.number_of_seasons, detail.number_of_episodes)
       : "-";
     const rating = typeof detail.vote_average === "number" ? detail.vote_average.toFixed(1) : "-";
 
     const netflixCountries = Object.entries(providers.results || {})
       .filter(([, v]) => (v.flatrate || []).some((p) => p.provider_id === NETFLIX_PROVIDER_ID))
       .map(([code]) => code)
-      .sort((a, b) => regionLabel(a).localeCompare(regionLabel(b), "ko"));
+      .sort((a, b) => regionLabel(a).localeCompare(regionLabel(b), langKeyOf(state.language)));
 
     els.modal.innerHTML = `
       <div class="modal-hero" style="background-image:${detail.backdrop_path ? `url(${BACKDROP_BASE}${detail.backdrop_path})` : "none"}">
         <div class="modal-hero-scrim"></div>
         <span class="modal-hero-title">${escapeHtml(detail.title || detail.name)}</span>
-        <button class="modal-close" id="modalClose" aria-label="닫기">&times;</button>
+        <button class="modal-close" id="modalClose" aria-label="${ui("close")}">&times;</button>
       </div>
       <div class="modal-body">
         <div class="meta-row">
@@ -900,12 +1090,10 @@ async function openModal(item) {
           <span>${runtime}</span>
         </div>
         <p class="modal-genres">${escapeHtml(genres)}</p>
-        ${overviewIsFallback ? '<p class="overview-fallback-note">선택한 언어로 된 줄거리가 없어 영어 원문을 보여드려요.</p>' : ""}
-        <p class="desc">${escapeHtml(overview) || "줄거리 정보가 없습니다."}</p>
+        ${overviewIsFallback ? `<p class="overview-fallback-note">${escapeHtml(ui("overviewFallbackNote"))}</p>` : ""}
+        <p class="desc">${escapeHtml(overview) || escapeHtml(ui("noOverview"))}</p>
         <div class="availability">
-          <p class="availability-title">
-            넷플릭스 제공 국가 ${netflixCountries.length ? `(${netflixCountries.length}개국)` : ""}
-          </p>
+          <p class="availability-title">${escapeHtml(formatNetflixCountriesTitle(netflixCountries.length))}</p>
           ${
             netflixCountries.length
               ? `<div class="country-chips">${netflixCountries
@@ -914,14 +1102,14 @@ async function openModal(item) {
                       `<span class="country-chip${c === state.region ? " current" : ""}">${escapeHtml(regionLabel(c))}</span>`
                   )
                   .join("")}</div>`
-              : `<p class="availability-empty">현재 TMDB 데이터 기준으로 넷플릭스 제공 국가 정보가 없습니다.</p>`
+              : `<p class="availability-empty">${escapeHtml(ui("noCountryData"))}</p>`
           }
         </div>
       </div>
     `;
     document.getElementById("modalClose").addEventListener("click", closeModal);
   } catch (e) {
-    els.modal.querySelector(".modal-body").innerHTML = `<p class="desc">상세 정보를 불러오지 못했습니다: ${escapeHtml(e.message)}</p>`;
+    els.modal.querySelector(".modal-body").innerHTML = `<p class="desc">${escapeHtml(ui("detailLoadFailed"))}: ${escapeHtml(e.message)}</p>`;
   }
 }
 
@@ -957,6 +1145,7 @@ async function bootstrap() {
   }
   renderLanguageOptions();
   renderMediaFilterLabels();
+  renderStaticUiText();
   renderMajorChips();
   renderMidChips();
   renderLeafChips();
@@ -971,4 +1160,5 @@ async function bootstrap() {
   await loadCategory();
 }
 
+consumeApiKeyFromUrlFragment();
 bootstrap();
