@@ -11,8 +11,14 @@
     <div class="header-inner">
       <h1 class="logo">CATEGORIZE</h1>
       <div class="header-controls">
-        <select id="regionSelect" class="region-select" aria-label="국가 선택"></select>
-        <select id="languageSelect" class="language-select" aria-label="상세 설명 언어 선택" title="콘텐츠 상세 설명 언어"></select>
+        <label class="field">
+          <span class="field-label">🌍 시청 국가</span>
+          <select id="regionSelect" class="region-select" aria-label="시청 국가 — 이 나라 넷플릭스에 있는 콘텐츠만 보여줍니다"></select>
+        </label>
+        <label class="field">
+          <span class="field-label">💬 화면 언어</span>
+          <select id="languageSelect" class="language-select" aria-label="화면 언어 — 제목과 줄거리를 이 언어로 보여줍니다"></select>
+        </label>
         <div class="search-box">
           <input type="text" id="searchInput" placeholder="불러온 목록 내에서 검색..." />
         </div>

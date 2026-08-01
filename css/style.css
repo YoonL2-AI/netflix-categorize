@@ -51,6 +51,21 @@ body {
   flex-wrap: wrap;
 }
 
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.field-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+  padding-left: 2px;
+}
+
 .region-select,
 .language-select {
   padding: 8px 10px;
