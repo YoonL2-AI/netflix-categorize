@@ -368,7 +368,7 @@ els.regionSelect.addEventListener("change", (e) => {
   loadCategory();
 });
 
-// ---------- 언어 선택 (모달 상세 설명 번역) ----------
+// ---------- 언어 선택 (제목·상세 설명 번역) ----------
 
 function renderLanguageOptions() {
   els.languageSelect.innerHTML = "";
@@ -384,6 +384,8 @@ function renderLanguageOptions() {
 els.languageSelect.addEventListener("change", (e) => {
   state.language = e.target.value;
   localStorage.setItem(LANG_STORAGE_KEY, state.language);
+  state.page = 1;
+  loadCategory();
 });
 
 // ---------- 카테고리 (대분류 > 중분류 > 소분류) ----------
@@ -464,6 +466,7 @@ async function buildDiscoverRequests(mid, leaf, region, page) {
     with_watch_providers: NETFLIX_PROVIDER_ID,
     with_watch_monetization_types: "flatrate",
     sort_by: "popularity.desc",
+    language: state.language,
     page,
   };
 
