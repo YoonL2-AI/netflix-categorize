@@ -219,6 +219,145 @@ const LANGUAGES = [
 ];
 const LANG_STORAGE_KEY = "tmdb_language";
 
+// ---------- 카테고리 UI 라벨 다국어 사전 ----------
+// TAXONOMY의 label(한국어)은 그대로 기본값으로 쓰고, 여기서는 다른 언어 번역만
+// id 기준으로 보관한다. "-all" 중분류(예: action-all)와 대분류 라벨을 그대로
+// 재사용하는 중분류(reality-all 등)는 아래에서 자동으로 만들어 붙인다.
+const LANG_KEYS = ["en", "ja", "zh", "es", "fr", "de", "pt", "vi", "id"];
+
+const ALL_WORD_I18N = {
+  en: "All", ja: "すべて", zh: "全部", es: "Todos", fr: "Tous",
+  de: "Alle", pt: "Todos", vi: "Tất cả", id: "Semua",
+};
+
+const MAJOR_I18N = {
+  action: { en: "Action & Adventure", ja: "アクション&アドベンチャー", zh: "动作与冒险", es: "Acción y aventura", fr: "Action et aventure", de: "Action & Abenteuer", pt: "Ação e aventura", vi: "Hành động & Phiêu lưu", id: "Aksi & Petualangan" },
+  comedy: { en: "Comedy", ja: "コメディ", zh: "喜剧", es: "Comedia", fr: "Comédie", de: "Komödie", pt: "Comédia", vi: "Hài kịch", id: "Komedi" },
+  drama: { en: "Drama", ja: "ドラマ", zh: "剧情", es: "Drama", fr: "Drame", de: "Drama", pt: "Drama", vi: "Chính kịch", id: "Drama" },
+  horror: { en: "Horror", ja: "ホラー", zh: "恐怖", es: "Terror", fr: "Horreur", de: "Horror", pt: "Terror", vi: "Kinh dị", id: "Horor" },
+  romance: { en: "Romance", ja: "ロマンス", zh: "爱情", es: "Romance", fr: "Romance", de: "Romantik", pt: "Romance", vi: "Lãng mạn", id: "Romansa" },
+  scifi: { en: "Sci-Fi & Fantasy", ja: "SF&ファンタジー", zh: "科幻与奇幻", es: "Ciencia ficción y fantasía", fr: "Science-fiction et fantastique", de: "Sci-Fi & Fantasy", pt: "Ficção científica e fantasia", vi: "Khoa học viễn tưởng & Giả tưởng", id: "Fiksi Ilmiah & Fantasi" },
+  thriller: { en: "Thrillers & Mysteries", ja: "スリラー&ミステリー", zh: "惊悚与悬疑", es: "Suspense y misterio", fr: "Thrillers et mystères", de: "Thriller & Mystery", pt: "Suspense e mistério", vi: "Ly kỳ & Bí ẩn", id: "Thriller & Misteri" },
+  crime: { en: "Crime", ja: "クライム", zh: "犯罪", es: "Crimen", fr: "Crime", de: "Krimi", pt: "Crime", vi: "Tội phạm", id: "Kriminal" },
+  documentary: { en: "Documentaries", ja: "ドキュメンタリー", zh: "纪录片", es: "Documentales", fr: "Documentaires", de: "Dokumentationen", pt: "Documentários", vi: "Phim tài liệu", id: "Dokumenter" },
+  animation: { en: "Animation", ja: "アニメーション", zh: "动画", es: "Animación", fr: "Animation", de: "Animation", pt: "Animação", vi: "Hoạt hình", id: "Animasi" },
+  family: { en: "Kids & Family", ja: "キッズ&ファミリー", zh: "儿童与家庭", es: "Infantil y familiar", fr: "Enfants et famille", de: "Kinder & Familie", pt: "Infantil e família", vi: "Trẻ em & Gia đình", id: "Anak & Keluarga" },
+  kdrama: { en: "Korean Content", ja: "韓国コンテンツ", zh: "韩国内容", es: "Contenido coreano", fr: "Contenu coréen", de: "Koreanische Inhalte", pt: "Conteúdo coreano", vi: "Nội dung Hàn Quốc", id: "Konten Korea" },
+  reality: { en: "Reality TV", ja: "リアリティ番組", zh: "真人秀", es: "Telerrealidad", fr: "Télé-réalité", de: "Reality-TV", pt: "Reality shows", vi: "Truyền hình thực tế", id: "Acara Realitas" },
+  music: { en: "Music & Musicals", ja: "音楽&ミュージカル", zh: "音乐与歌舞", es: "Música y musicales", fr: "Musique et comédies musicales", de: "Musik & Musicals", pt: "Música e musicais", vi: "Âm nhạc & Nhạc kịch", id: "Musik & Musikal" },
+  mature: { en: "Mature Content", ja: "成人向けコンテンツ", zh: "成人内容", es: "Contenido para adultos", fr: "Contenu pour adultes", de: "Inhalte für Erwachsene", pt: "Conteúdo adulto", vi: "Nội dung dành cho người lớn", id: "Konten Dewasa" },
+};
+
+// "{major} 전체" 패턴 중분류: id → 어느 대분류에서 파생됐는지
+const ALL_MID_DERIVED_FROM = {
+  "action-all": "action", "comedy-all": "comedy", "drama-all": "drama", "horror-all": "horror",
+  "romance-all": "romance", "scifi-all": "scifi", "thriller-all": "thriller", "crime-all": "crime",
+  "doc-all": "documentary", "anim-all": "animation", "family-all": "family",
+};
+// 대분류 라벨을 그대로 재사용하는 중분류(중분류가 하나뿐이라 "전체" 접미사가 없는 경우)
+const REUSE_MAJOR_LABEL_MID = { "reality-all": "reality", "music-all": "music", "mature-all": "mature" };
+
+function allSuffixLabel(majorLabel, langKey) {
+  switch (langKey) {
+    case "en": return `All ${majorLabel}`;
+    case "ja": return `${majorLabel} すべて`;
+    case "zh": return `全部${majorLabel}`;
+    case "es": return `Todo ${majorLabel}`;
+    case "fr": return `Tout ${majorLabel}`;
+    case "de": return `Alle ${majorLabel}`;
+    case "pt": return `Todo(a) ${majorLabel}`;
+    case "vi": return `Tất cả ${majorLabel}`;
+    case "id": return `Semua ${majorLabel}`;
+    default: return majorLabel;
+  }
+}
+
+const DISTINCT_MID_I18N = {
+  war: { en: "Military & War", ja: "ミリタリー&戦争", zh: "军事与战争", es: "Militar y guerra", fr: "Militaire et guerre", de: "Militär & Krieg", pt: "Militar e guerra", vi: "Quân sự & Chiến tranh", id: "Militer & Perang" },
+  "stand-up": { en: "Stand-Up Comedy", ja: "スタンダップコメディ", zh: "单口喜剧", es: "Monólogos de comedia", fr: "One-man-show comique", de: "Stand-Up-Comedy", pt: "Stand-up comedy", vi: "Hài độc thoại", id: "Komedi Tunggal" },
+  "psych-horror": { en: "Psychological Horror", ja: "サイコホラー", zh: "心理恐怖", es: "Terror psicológico", fr: "Horreur psychologique", de: "Psychohorror", pt: "Terror psicológico", vi: "Kinh dị tâm lý", id: "Horor Psikologis" },
+  "time-travel": { en: "Time Travel & Alternate Realities", ja: "タイムトラベル&パラレルワールド", zh: "时间旅行与平行世界", es: "Viajes en el tiempo y realidades alternativas", fr: "Voyage dans le temps et réalités alternatives", de: "Zeitreise & Parallelwelten", pt: "Viagem no tempo e realidades alternativas", vi: "Du hành thời gian & Thế giới song song", id: "Perjalanan Waktu & Realitas Alternatif" },
+  "family-drama": { en: "Family Drama", ja: "ファミリードラマ", zh: "家庭剧", es: "Drama familiar", fr: "Drame familial", de: "Familiendrama", pt: "Drama familiar", vi: "Chính kịch gia đình", id: "Drama Keluarga" },
+  anime: { en: "Japanese Anime", ja: "日本のアニメ", zh: "日本动画", es: "Anime japonés", fr: "Anime japonais", de: "Japanischer Anime", pt: "Anime japonês", vi: "Anime Nhật Bản", id: "Anime Jepang" },
+  "kr-drama": { en: "Korean Dramas", ja: "韓国ドラマ", zh: "韩剧", es: "Doramas coreanos", fr: "Séries coréennes", de: "Koreanische Dramen", pt: "Doramas coreanos", vi: "Phim truyền hình Hàn Quốc", id: "Drama Korea" },
+  "kr-movie": { en: "Korean Movies", ja: "韓国映画", zh: "韩国电影", es: "Películas coreanas", fr: "Films coréens", de: "Koreanische Filme", pt: "Filmes coreanos", vi: "Phim điện ảnh Hàn Quốc", id: "Film Korea" },
+  "kr-variety": { en: "Korean Variety Shows", ja: "韓国バラエティ番組", zh: "韩国综艺", es: "Programas de variedades coreanos", fr: "Émissions de variétés coréennes", de: "Koreanische Varietéshows", pt: "Programas de variedades coreanos", vi: "Chương trình giải trí Hàn Quốc", id: "Acara Variety Korea" },
+};
+
+const LEAF_I18N = {
+  "2020s": { en: "2020s New Releases", ja: "2020年代の新作", zh: "2020年代新作", es: "Estrenos de la década de 2020", fr: "Nouveautés des années 2020", de: "Neuerscheinungen der 2020er", pt: "Lançamentos dos anos 2020", vi: "Phim mới thập niên 2020", id: "Rilisan Baru 2020-an" },
+  "adult-anim": { en: "Adult Animation", ja: "大人向けアニメ", zh: "成人动画", es: "Animación para adultos", fr: "Animation pour adultes", de: "Animation für Erwachsene", pt: "Animação adulta", vi: "Hoạt hình người lớn", id: "Animasi Dewasa" },
+  classic: { en: "Classics (Before 1999)", ja: "クラシック(1999年以前)", zh: "经典(1999年以前)", es: "Clásicos (antes de 1999)", fr: "Classiques (avant 1999)", de: "Klassiker (vor 1999)", pt: "Clássicos (antes de 1999)", vi: "Kinh điển (trước 1999)", id: "Klasik (Sebelum 1999)" },
+  courtroom: { en: "Courtroom Drama", ja: "法廷ドラマ", zh: "法庭剧", es: "Drama judicial", fr: "Drame judiciaire", de: "Gerichtsdrama", pt: "Drama de tribunal", vi: "Phim pháp đình", id: "Drama Pengadilan" },
+  "crime-thriller": { en: "Crime Thrillers", ja: "クライムスリラー", zh: "犯罪惊悚", es: "Thriller criminal", fr: "Thriller criminel", de: "Krimi-Thriller", pt: "Suspense criminal", vi: "Ly kỳ tội phạm", id: "Thriller Kriminal" },
+  "dark-comedy": { en: "Dark Comedy", ja: "ブラックコメディ", zh: "黑色喜剧", es: "Comedia negra", fr: "Comédie noire", de: "Schwarze Komödie", pt: "Comédia sombria", vi: "Hài đen", id: "Komedi Gelap" },
+  detective: { en: "Detective Stories", ja: "刑事ドラマ", zh: "侦探故事", es: "Historias de detectives", fr: "Histoires de détectives", de: "Detektivgeschichten", pt: "Histórias de detetive", vi: "Truyện trinh thám", id: "Cerita Detektif" },
+  dystopia: { en: "Dystopian", ja: "ディストピア", zh: "反乌托邦", es: "Distopía", fr: "Dystopie", de: "Dystopie", pt: "Distopia", vi: "Dystopia", id: "Distopia" },
+  "family-adventure": { en: "Family Adventure", ja: "ファミリーアドベンチャー", zh: "家庭冒险", es: "Aventura familiar", fr: "Aventure familiale", de: "Familienabenteuer", pt: "Aventura em família", vi: "Phiêu lưu gia đình", id: "Petualangan Keluarga" },
+  "family-bond": { en: "Family Bonds", ja: "家族の絆", zh: "家庭羁绊", es: "Lazos familiares", fr: "Liens familiaux", de: "Familienbande", pt: "Laços familiares", vi: "Tình cảm gia đình", id: "Ikatan Keluarga" },
+  gangster: { en: "Gangster", ja: "ギャング映画", zh: "黑帮", es: "Gánsteres", fr: "Gangsters", de: "Gangster", pt: "Gângsteres", vi: "Xã hội đen", id: "Gangster" },
+  ghost: { en: "Ghosts & Hauntings", ja: "心霊・幽霊", zh: "灵异鬼怪", es: "Fantasmas y casas embrujadas", fr: "Fantômes et hantises", de: "Geister & Spuk", pt: "Fantasmas e assombrações", vi: "Ma quái", id: "Hantu" },
+  heist: { en: "Heist", ja: "強盗もの", zh: "劫案", es: "Atracos", fr: "Braquage", de: "Heist", pt: "Assaltos", vi: "Cướp", id: "Perampokan" },
+  "kids-anim": { en: "Kids Animation", ja: "キッズアニメ", zh: "儿童动画", es: "Animación infantil", fr: "Animation pour enfants", de: "Kinderanimation", pt: "Animação infantil", vi: "Hoạt hình thiếu nhi", id: "Animasi Anak" },
+  "kr-drama-new": { en: "2020s Korean Dramas", ja: "2020年代の韓国ドラマ", zh: "2020年代韩剧", es: "Doramas coreanos de los 2020", fr: "Séries coréennes des années 2020", de: "Koreanische Dramen der 2020er", pt: "Doramas coreanos dos anos 2020", vi: "Phim Hàn thập niên 2020", id: "Drama Korea 2020-an" },
+  magic: { en: "Magic & Fantasy", ja: "マジック&ファンタジー", zh: "魔法奇幻", es: "Magia y fantasía", fr: "Magie et fantastique", de: "Magie & Fantasy", pt: "Magia e fantasia", vi: "Phép thuật & Giả tưởng", id: "Sihir & Fantasi" },
+  "martial-arts": { en: "Martial Arts", ja: "カンフー・武術", zh: "武侠功夫", es: "Artes marciales", fr: "Arts martiaux", de: "Kampfkunst", pt: "Artes marciais", vi: "Võ thuật", id: "Bela Diri" },
+  "music-doc": { en: "Music Documentaries", ja: "音楽ドキュメンタリー", zh: "音乐纪录片", es: "Documentales musicales", fr: "Documentaires musicaux", de: "Musikdokumentationen", pt: "Documentários musicais", vi: "Phim tài liệu âm nhạc", id: "Dokumenter Musik" },
+  nature: { en: "Nature Documentaries", ja: "自然ドキュメンタリー", zh: "自然纪录片", es: "Documentales de naturaleza", fr: "Documentaires animaliers", de: "Naturdokumentationen", pt: "Documentários de natureza", vi: "Phim tài liệu thiên nhiên", id: "Dokumenter Alam" },
+  parody: { en: "Parody & Spoof", ja: "パロディ", zh: "恶搞喜剧", es: "Parodia", fr: "Parodie", de: "Parodie", pt: "Paródia", vi: "Nhại lại", id: "Parodi" },
+  period: { en: "Period Drama", ja: "時代劇", zh: "年代剧", es: "Drama de época", fr: "Drame historique", de: "Historiendrama", pt: "Drama de época", vi: "Phim cổ trang", id: "Drama Periode" },
+  "period-romance": { en: "Period Romance", ja: "時代物ロマンス", zh: "年代爱情", es: "Romance de época", fr: "Romance historique", de: "Historienromanze", pt: "Romance de época", vi: "Lãng mạn cổ trang", id: "Romansa Periode" },
+  political: { en: "Political Drama", ja: "政治ドラマ", zh: "政治剧", es: "Drama político", fr: "Drame politique", de: "Politdrama", pt: "Drama político", vi: "Chính kịch chính trị", id: "Drama Politik" },
+  preschool: { en: "Preschool", ja: "未就学児向け", zh: "学龄前", es: "Preescolar", fr: "Préscolaire", de: "Vorschule", pt: "Pré-escolar", vi: "Mầm non", id: "Prasekolah" },
+  "psych-thriller": { en: "Psychological Thriller", ja: "サイコスリラー", zh: "心理惊悚", es: "Thriller psicológico", fr: "Thriller psychologique", de: "Psychothriller", pt: "Suspense psicológico", vi: "Ly kỳ tâm lý", id: "Thriller Psikologis" },
+  "rom-com": { en: "Romantic Comedy", ja: "ロマンティックコメディ", zh: "爱情喜剧", es: "Comedia romántica", fr: "Comédie romantique", de: "Liebeskomödie", pt: "Comédia romântica", vi: "Hài lãng mạn", id: "Komedi Romantis" },
+  "rom-com2": { en: "Romantic Comedy", ja: "ロマンティックコメディ", zh: "爱情喜剧", es: "Comedia romántica", fr: "Comédie romantique", de: "Liebeskomödie", pt: "Comédia romântica", vi: "Hài lãng mạn", id: "Komedi Romantis" },
+  slasher: { en: "Slasher", ja: "スラッシャー", zh: "杀人狂魔", es: "Slasher", fr: "Slasher", de: "Slasher", pt: "Slasher", vi: "Kinh dị giết người", id: "Slasher" },
+  space: { en: "Space Sci-Fi", ja: "宇宙SF", zh: "太空科幻", es: "Ciencia ficción espacial", fr: "Science-fiction spatiale", de: "Weltraum-Sci-Fi", pt: "Ficção científica espacial", vi: "Khoa học viễn tưởng không gian", id: "Fiksi Ilmiah Luar Angkasa" },
+  "special-forces": { en: "Special Forces", ja: "特殊部隊", zh: "特种部队", es: "Fuerzas especiales", fr: "Forces spéciales", de: "Spezialeinheiten", pt: "Forças especiais", vi: "Lực lượng đặc biệt", id: "Pasukan Khusus" },
+  spy: { en: "Spy & Espionage", ja: "スパイ・諜報", zh: "间谍", es: "Espionaje", fr: "Espionnage", de: "Spionage", pt: "Espionagem", vi: "Gián điệp", id: "Mata-mata" },
+  superhero: { en: "Superhero", ja: "スーパーヒーロー", zh: "超级英雄", es: "Superhéroes", fr: "Super-héros", de: "Superhelden", pt: "Super-heróis", vi: "Siêu anh hùng", id: "Superhero" },
+  "true-crime": { en: "True Crime", ja: "実録犯罪", zh: "真实犯罪", es: "Crímenes reales", fr: "Crimes réels", de: "True Crime", pt: "Crimes reais", vi: "Tội phạm có thật", id: "Kejahatan Nyata" },
+  "true-crime-doc": { en: "True Crime Documentaries", ja: "実録犯罪ドキュメンタリー", zh: "真实犯罪纪录片", es: "Documentales de crímenes reales", fr: "Documentaires sur des crimes réels", de: "True-Crime-Dokumentationen", pt: "Documentários de crimes reais", vi: "Phim tài liệu tội phạm có thật", id: "Dokumenter Kejahatan Nyata" },
+  "true-story": { en: "Based on a True Story", ja: "実話ベース", zh: "根据真实故事改编", es: "Basado en hechos reales", fr: "Basé sur une histoire vraie", de: "Nach einer wahren Geschichte", pt: "Baseado em fatos reais", vi: "Dựa trên câu chuyện có thật", id: "Berdasarkan Kisah Nyata" },
+  zombie: { en: "Zombie", ja: "ゾンビ", zh: "僵尸", es: "Zombis", fr: "Zombies", de: "Zombie", pt: "Zumbis", vi: "Xác sống", id: "Zombie" },
+};
+
+const MEDIA_FILTER_I18N = {
+  "media-all": { en: "All Content", ja: "すべてのコンテンツ", zh: "全部内容", es: "Todo el contenido", fr: "Tout le contenu", de: "Alle Inhalte", pt: "Todo o conteúdo", vi: "Tất cả nội dung", id: "Semua Konten" },
+  "media-movie": { en: "Movies Only", ja: "映画のみ", zh: "仅电影", es: "Solo películas", fr: "Films uniquement", de: "Nur Filme", pt: "Somente filmes", vi: "Chỉ phim điện ảnh", id: "Hanya Film" },
+  "media-tv": { en: "Series Only", ja: "シリーズのみ", zh: "仅剧集", es: "Solo series", fr: "Séries uniquement", de: "Nur Serien", pt: "Somente séries", vi: "Chỉ phim bộ", id: "Hanya Serial" },
+};
+
+// 최종 사전: id → { en, ja, zh, ... }. "-all"/재사용 중분류는 대분류에서 파생시켜 합친다.
+const CATEGORY_I18N = { ...MAJOR_I18N, ...DISTINCT_MID_I18N, ...LEAF_I18N, ...MEDIA_FILTER_I18N };
+Object.entries(ALL_MID_DERIVED_FROM).forEach(([midId, majorId]) => {
+  CATEGORY_I18N[midId] = {};
+  LANG_KEYS.forEach((lk) => {
+    CATEGORY_I18N[midId][lk] = allSuffixLabel(MAJOR_I18N[majorId][lk], lk);
+  });
+});
+Object.entries(REUSE_MAJOR_LABEL_MID).forEach(([midId, majorId]) => {
+  CATEGORY_I18N[midId] = MAJOR_I18N[majorId];
+});
+
+function langKeyOf(languageCode) {
+  return languageCode.split("-")[0];
+}
+
+// 카테고리 트리 노드(대/중/소분류)의 라벨을 현재 선택된 언어로 번역해 돌려준다.
+// 번역이 없으면(한국어 선택 시 포함) 원래 한국어 label로 자연스럽게 폴백된다.
+function catLabel(node) {
+  const lk = langKeyOf(state.language);
+  if (node.id === "all") return ALL_WORD_I18N[lk] || node.label;
+  return CATEGORY_I18N[node.id]?.[lk] || node.label;
+}
+
+function mediaFilterLabel(id, koreanFallback) {
+  const lk = langKeyOf(state.language);
+  return MEDIA_FILTER_I18N[id]?.[lk] || koreanFallback;
+}
+
 // TMDB discover/movie의 certification 필터는 국가별 등급 표기를 그대로 써야 해서,
 // 주요 국가의 "청소년 관람불가"에 해당하는 등급 문자열을 매핑해둔다.
 const MATURE_CERT_BY_REGION = {
@@ -379,6 +518,12 @@ els.mediaFilter.addEventListener("change", (e) => {
   loadCategory();
 });
 
+function renderMediaFilterLabels() {
+  document.getElementById("mediaAllLabel").textContent = mediaFilterLabel("media-all", "전체 콘텐츠");
+  document.getElementById("mediaMovieLabel").textContent = mediaFilterLabel("media-movie", "영화만");
+  document.getElementById("mediaTvLabel").textContent = mediaFilterLabel("media-tv", "시리즈만");
+}
+
 // mid가 지원하는 미디어 타입과 사용자가 고른 필터를 합쳐서 실제 조회할 타입을 정한다.
 // 둘이 겹치지 않으면(예: 공포 카테고리는 영화만 있는데 "시리즈만" 선택) null을 반환.
 function resolveMedia(mid, filter) {
@@ -406,6 +551,10 @@ els.languageSelect.addEventListener("change", (e) => {
   state.language = e.target.value;
   localStorage.setItem(LANG_STORAGE_KEY, state.language);
   state.page = 1;
+  renderMajorChips();
+  renderMidChips();
+  renderLeafChips();
+  renderMediaFilterLabels();
   loadCategory();
 });
 
@@ -430,7 +579,7 @@ function renderMajorChips() {
   TAXONOMY.forEach((major) => {
     const btn = document.createElement("button");
     btn.className = "chip" + (major.id === state.major.id ? " active" : "") + (major.id === "mature" ? " chip-mature" : "");
-    btn.textContent = major.label;
+    btn.textContent = catLabel(major);
     btn.addEventListener("click", () => {
       state.major = major;
       state.mid = major.mids[0];
@@ -450,7 +599,7 @@ function renderMidChips() {
   state.major.mids.forEach((mid) => {
     const btn = document.createElement("button");
     btn.className = "chip" + (mid.id === state.mid.id ? " active" : "");
-    btn.textContent = mid.label;
+    btn.textContent = catLabel(mid);
     btn.title = mid.note || "";
     btn.addEventListener("click", () => {
       state.mid = mid;
@@ -470,7 +619,7 @@ function renderLeafChips() {
   state.mid.leaves.forEach((leaf) => {
     const btn = document.createElement("button");
     btn.className = "chip" + (leaf.id === state.leaf.id ? " active" : "");
-    btn.textContent = leaf.label;
+    btn.textContent = catLabel(leaf);
     btn.addEventListener("click", () => {
       state.leaf = leaf;
       state.page = 1;
@@ -780,6 +929,7 @@ async function bootstrap() {
     return;
   }
   renderLanguageOptions();
+  renderMediaFilterLabels();
   renderMajorChips();
   renderMidChips();
   renderLeafChips();
