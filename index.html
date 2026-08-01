@@ -9,14 +9,14 @@
 <body>
   <header class="header">
     <div class="header-inner">
-      <h1 class="logo">CATEGORIZE</h1>
+      <div class="brand-row">
+        <h1 class="logo">CATEGORIZE</h1>
+        <span class="available-in">available in</span>
+        <select id="regionSelect" class="region-select" aria-label="시청 국가 — 이 나라 넷플릭스에 있는 콘텐츠만 보여줍니다"></select>
+      </div>
       <div class="header-controls">
         <label class="field">
-          <span class="field-label">🌍 시청 국가</span>
-          <select id="regionSelect" class="region-select" aria-label="시청 국가 — 이 나라 넷플릭스에 있는 콘텐츠만 보여줍니다"></select>
-        </label>
-        <label class="field">
-          <span class="field-label">💬 화면 언어</span>
+          <span class="field-label">Languages</span>
           <select id="languageSelect" class="language-select" aria-label="화면 언어 — 제목과 줄거리를 이 언어로 보여줍니다"></select>
         </label>
         <div class="search-box">
@@ -32,7 +32,23 @@
   <nav class="category-nav category-nav-leaf" id="leafNav"></nav>
 
   <main class="content-area">
-    <p class="result-count" id="resultCount"></p>
+    <div class="toolbar-row">
+      <p class="result-count" id="resultCount"></p>
+      <div class="media-filter" id="mediaFilter" role="radiogroup" aria-label="콘텐츠 유형">
+        <label class="radio-chip">
+          <input type="radio" name="mediaFilter" value="all" checked />
+          <span>전체 콘텐츠</span>
+        </label>
+        <label class="radio-chip">
+          <input type="radio" name="mediaFilter" value="movie" />
+          <span>영화만</span>
+        </label>
+        <label class="radio-chip">
+          <input type="radio" name="mediaFilter" value="tv" />
+          <span>시리즈만</span>
+        </label>
+      </div>
+    </div>
     <p class="status-msg" id="statusMsg" hidden></p>
     <div class="grid" id="grid"></div>
     <p class="empty-msg" id="emptyMsg" hidden>조건에 맞는 콘텐츠가 없습니다.</p>

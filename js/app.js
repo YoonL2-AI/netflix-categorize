@@ -231,6 +231,7 @@ const state = {
   region: "KR",
   regions: [],
   language: localStorage.getItem(LANG_STORAGE_KEY) || "ko-KR",
+  mediaFilter: "all", // "all" | "movie" | "tv"
   major: TAXONOMY[0],
   mid: TAXONOMY[0].mids[0],
   leaf: TAXONOMY[0].mids[0].leaves[0],
@@ -246,6 +247,7 @@ const els = {
   languageSelect: document.getElementById("languageSelect"),
   searchInput: document.getElementById("searchInput"),
   settingsBtn: document.getElementById("settingsBtn"),
+  mediaFilter: document.getElementById("mediaFilter"),
   majorNav: document.getElementById("majorNav"),
   midNav: document.getElementById("midNav"),
   leafNav: document.getElementById("leafNav"),
@@ -368,6 +370,25 @@ els.regionSelect.addEventListener("change", (e) => {
   loadCategory();
 });
 
+// ---------- 콘텐츠 유형 필터 (전체 / 영화만 / 시리즈만) ----------
+
+els.mediaFilter.addEventListener("change", (e) => {
+  if (e.target.name !== "mediaFilter") return;
+  state.mediaFilter = e.target.value;
+  state.page = 1;
+  loadCategory();
+});
+
+// mid가 지원하는 미디어 타입과 사용자가 고른 필터를 합쳐서 실제 조회할 타입을 정한다.
+// 둘이 겹치지 않으면(예: 공포 카테고리는 영화만 있는데 "시리즈만" 선택) null을 반환.
+function resolveMedia(mid, filter) {
+  const midMedia = mid.media || "both";
+  if (filter === "all") return midMedia;
+  if (midMedia === "both") return filter;
+  if (midMedia === filter) return midMedia;
+  return null;
+}
+
 // ---------- 언어 선택 (제목·상세 설명 번역) ----------
 
 function renderLanguageOptions() {
@@ -471,6 +492,7 @@ async function buildDiscoverRequests(mid, leaf, region, page) {
   };
 
   if (mid.special === "certification") {
+    if (resolveMedia({ media: "movie" }, state.mediaFilter) !== "movie") return [];
     const cert = MATURE_CERT_BY_REGION[region];
     if (!cert) return [];
     return [
@@ -485,7 +507,8 @@ async function buildDiscoverRequests(mid, leaf, region, page) {
   if (leaf.keyword) keywordId = await resolveKeywordId(leaf.keyword);
 
   const originCountry = leaf.originCountry || mid.originCountry;
-  const media = mid.media || "both";
+  const media = resolveMedia(mid, state.mediaFilter);
+  if (!media) return [];
   const requests = [];
 
   if (media !== "tv") {
@@ -522,7 +545,12 @@ async function loadCategory() {
   if (!requests.length) {
     state.items = state.page === 1 ? [] : state.items;
     state.hasMore = false;
-    showStatus(`${regionLabel(state.region)}에서는 이 카테고리의 등급 필터를 지원하지 않아요.`);
+    const mediaMismatch = resolveMedia(state.mid, state.mediaFilter) === null;
+    showStatus(
+      mediaMismatch
+        ? "이 카테고리는 선택하신 콘텐츠 유형(영화/시리즈)을 제공하지 않아요."
+        : `${regionLabel(state.region)}에서는 이 카테고리의 등급 필터를 지원하지 않아요.`
+    );
     render();
     state.loading = false;
     return;
