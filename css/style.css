@@ -97,6 +97,48 @@ body {
   gap: 8px;
 }
 
+.category-nav-mid {
+  padding-top: 10px;
+}
+
+.category-nav-mid .chip {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-dim);
+  padding: 4px 12px;
+  font-size: 12.5px;
+}
+
+.category-nav-mid .chip:hover { color: var(--text); }
+
+.category-nav-mid .chip.active {
+  background: rgba(229, 9, 20, 0.15);
+  border-color: rgba(229, 9, 20, 0.4);
+  color: #ff6b6f;
+  font-weight: 600;
+}
+
+.category-nav-leaf {
+  padding-top: 6px;
+}
+
+.category-nav-leaf .chip {
+  padding: 4px 12px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.08);
+  color: var(--text-dim);
+}
+
+.category-nav-leaf .chip:hover { color: var(--text); }
+
+.category-nav-leaf .chip.active {
+  background: rgba(255,255,255,0.14);
+  border-color: rgba(255,255,255,0.3);
+  color: #fff;
+  font-weight: 600;
+}
+
 .chip {
   padding: 6px 16px;
   border-radius: 20px;
