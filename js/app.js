@@ -17,6 +17,13 @@ const PAGE_SIZE_NOTICE = 20; // TMDB discover page size
 // keyword/originCountry/dateFrom/dateTo로 범위를 좁힌다. "전체"는 추가 필터 없음.
 const TAXONOMY = [
   {
+    id: "browse-all", label: "전체 콘텐츠",
+    mids: [
+      { id: "browse-all-mid", label: "전체 콘텐츠", media: "both", movieGenres: [], tvGenres: [],
+        leaves: [{ id: "all", label: "전체" }] },
+    ],
+  },
+  {
     id: "action", label: "액션 & 모험",
     mids: [
       { id: "action-all", label: "액션 & 모험 전체", media: "both", movieGenres: [28, 12], tvGenres: [10759],
@@ -340,6 +347,9 @@ Object.entries(ALL_MID_DERIVED_FROM).forEach(([midId, majorId]) => {
 Object.entries(REUSE_MAJOR_LABEL_MID).forEach(([midId, majorId]) => {
   CATEGORY_I18N[midId] = MAJOR_I18N[majorId];
 });
+// "전체 콘텐츠" 대분류/중분류는 콘텐츠 유형 필터의 "전체 콘텐츠" 번역을 그대로 재사용한다.
+CATEGORY_I18N["browse-all"] = MEDIA_FILTER_I18N["media-all"];
+CATEGORY_I18N["browse-all-mid"] = MEDIA_FILTER_I18N["media-all"];
 
 function langKeyOf(languageCode) {
   return languageCode.split("-")[0];
@@ -366,6 +376,7 @@ const UI_I18N = {
   series: { ko: "시리즈", en: "Series", ja: "シリーズ", zh: "剧集", es: "Serie", fr: "Série", de: "Serie", pt: "Série", vi: "Phim bộ", id: "Serial" },
   close: { ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭", es: "Cerrar", fr: "Fermer", de: "Schließen", pt: "Fechar", vi: "Đóng", id: "Tutup" },
   loading: { ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中...", es: "Cargando...", fr: "Chargement...", de: "Wird geladen...", pt: "Carregando...", vi: "Đang tải...", id: "Memuat..." },
+  searching: { ko: "전체 카테고리에서 검색 중...", en: "Searching across all categories...", ja: "全カテゴリーを検索中...", zh: "正在全部分类中搜索...", es: "Buscando en todas las categorías...", fr: "Recherche dans toutes les catégories...", de: "Suche in allen Kategorien...", pt: "Pesquisando em todas as categorias...", vi: "Đang tìm kiếm trên tất cả danh mục...", id: "Mencari di semua kategori..." },
   loadMore: { ko: "더 보기", en: "Load More", ja: "もっと見る", zh: "加载更多", es: "Cargar más", fr: "Charger plus", de: "Mehr laden", pt: "Carregar mais", vi: "Tải thêm", id: "Muat Lagi" },
   emptyResults: { ko: "조건에 맞는 콘텐츠가 없습니다.", en: "No content matches your filters.", ja: "条件に合うコンテンツがありません。", zh: "没有符合条件的内容。", es: "No hay contenido que coincida con los filtros.", fr: "Aucun contenu ne correspond aux filtres.", de: "Keine Inhalte gefunden, die den Filtern entsprechen.", pt: "Nenhum conteúdo corresponde aos filtros.", vi: "Không có nội dung phù hợp với bộ lọc.", id: "Tidak ada konten yang sesuai dengan filter." },
   searchPlaceholder: { ko: "불러온 목록 내에서 검색...", en: "Search within loaded list...", ja: "読み込み済みリスト内で検索...", zh: "在已加载列表中搜索...", es: "Buscar en la lista cargada...", fr: "Rechercher dans la liste chargée...", de: "In geladener Liste suchen...", pt: "Pesquisar na lista carregada...", vi: "Tìm trong danh sách đã tải...", id: "Cari dalam daftar yang dimuat..." },
@@ -434,16 +445,16 @@ function formatNetflixCountriesTitle(count) {
 function formatSearchResultCount(n) {
   const lk = langKeyOf(state.language);
   switch (lk) {
-    case "en": return `${n} search results (within loaded list)`;
-    case "ja": return `検索結果 ${n}件(読み込み済み内)`;
-    case "zh": return `搜索结果 ${n}个(已加载列表内)`;
-    case "es": return `${n} resultados de búsqueda (en la lista cargada)`;
-    case "fr": return `${n} résultats de recherche (dans la liste chargée)`;
-    case "de": return `${n} Suchergebnisse (in geladener Liste)`;
-    case "pt": return `${n} resultados de busca (na lista carregada)`;
-    case "vi": return `${n} kết quả tìm kiếm (trong danh sách đã tải)`;
-    case "id": return `${n} hasil pencarian (dalam daftar yang dimuat)`;
-    default: return `검색 결과 ${n}개 (불러온 목록 내)`;
+    case "en": return `${n} results across all categories`;
+    case "ja": return `全カテゴリーから検索結果 ${n}件`;
+    case "zh": return `全部分类中的搜索结果 ${n}个`;
+    case "es": return `${n} resultados en todas las categorías`;
+    case "fr": return `${n} résultats dans toutes les catégories`;
+    case "de": return `${n} Ergebnisse in allen Kategorien`;
+    case "pt": return `${n} resultados em todas as categorias`;
+    case "vi": return `${n} kết quả trên tất cả danh mục`;
+    case "id": return `${n} hasil di semua kategori`;
+    default: return `전체 카테고리 검색 결과 ${n}개`;
   }
 }
 
@@ -536,6 +547,8 @@ const state = {
   items: [],
   totalResults: 0,
   loading: false,
+  searchResults: [],
+  searching: false,
 };
 
 const els = {
@@ -705,10 +718,20 @@ function renderRegionOptions() {
   });
 }
 
+// 검색어가 있으면(전체 카테고리 검색 모드) 검색을 다시 실행하고,
+// 없으면 평소처럼 현재 카테고리를 다시 불러온다.
+function refreshResults() {
+  if (state.query) {
+    runSearch(state.query);
+  } else {
+    state.page = 1;
+    loadCategory();
+  }
+}
+
 els.regionSelect.addEventListener("change", (e) => {
   state.region = e.target.value;
-  state.page = 1;
-  loadCategory();
+  refreshResults();
 });
 
 // ---------- 콘텐츠 유형 필터 (전체 / 영화만 / 시리즈만) ----------
@@ -716,8 +739,7 @@ els.regionSelect.addEventListener("change", (e) => {
 els.mediaFilter.addEventListener("change", (e) => {
   if (e.target.name !== "mediaFilter") return;
   state.mediaFilter = e.target.value;
-  state.page = 1;
-  loadCategory();
+  refreshResults();
 });
 
 function renderMediaFilterLabels() {
@@ -760,7 +782,6 @@ function renderLanguageOptions() {
 els.languageSelect.addEventListener("change", (e) => {
   state.language = e.target.value;
   localStorage.setItem(LANG_STORAGE_KEY, state.language);
-  state.page = 1;
   renderRegionOptions();
   renderMajorChips();
   renderMidChips();
@@ -768,7 +789,7 @@ els.languageSelect.addEventListener("change", (e) => {
   renderMediaFilterLabels();
   renderStaticUiText();
   render(); // 결과 개수 라벨(총 N개 등)도 즉시 새 언어로 다시 그린다
-  loadCategory();
+  refreshResults();
 });
 
 // ---------- 카테고리 (대분류 > 중분류 > 소분류) ----------
@@ -794,6 +815,7 @@ function renderMajorChips() {
     btn.className = "chip" + (major.id === state.major.id ? " active" : "") + (major.id === "mature" ? " chip-mature" : "");
     btn.textContent = catLabel(major);
     btn.addEventListener("click", () => {
+      clearSearch();
       state.major = major;
       state.mid = major.mids[0];
       state.leaf = state.mid.leaves[0];
@@ -815,6 +837,7 @@ function renderMidChips() {
     btn.textContent = catLabel(mid);
     btn.title = mid.note || "";
     btn.addEventListener("click", () => {
+      clearSearch();
       state.mid = mid;
       state.leaf = mid.leaves[0];
       state.page = 1;
@@ -834,6 +857,7 @@ function renderLeafChips() {
     btn.className = "chip" + (leaf.id === state.leaf.id ? " active" : "");
     btn.textContent = catLabel(leaf);
     btn.addEventListener("click", () => {
+      clearSearch();
       state.leaf = leaf;
       state.page = 1;
       renderLeafChips();
@@ -958,16 +982,79 @@ async function loadCategory() {
   render();
 }
 
+// ---------- 검색 (특정 카테고리가 아니라 전체 카테고리 대상) ----------
+// 카테고리 화면은 장르로 좁힌 discover 결과만 다루지만, 검색창은 TMDB의 실제
+// 검색 API(/search/movie, /search/tv)로 카탈로그 전체를 대상으로 찾은 뒤,
+// 그중 현재 국가 넷플릭스에 정액제로 올라와 있는 항목만 걸러서 보여준다.
+const SEARCH_CANDIDATE_LIMIT = 20; // 미디어 타입별로 확인할 최대 후보 수
+
+let searchToken = 0;
+
+async function runSearch(query) {
+  const myToken = ++searchToken;
+  state.searching = true;
+  showStatus(ui("searching"));
+  render();
+
+  const media = resolveMedia({ media: "both" }, state.mediaFilter) || "both";
+  const searchCalls = [];
+  if (media !== "tv") searchCalls.push(tmdbFetch("/search/movie", { query, language: state.language, page: 1 }).then((d) => ({ mediaType: "movie", data: d })));
+  if (media !== "movie") searchCalls.push(tmdbFetch("/search/tv", { query, language: state.language, page: 1 }).then((d) => ({ mediaType: "tv", data: d })));
+
+  try {
+    const searchResults = await Promise.all(searchCalls);
+    const candidates = searchResults.flatMap(({ mediaType, data }) =>
+      (data.results || []).slice(0, SEARCH_CANDIDATE_LIMIT).map((item) => ({ ...item, media_type: mediaType }))
+    );
+
+    // 각 후보가 이 국가 넷플릭스에 정액제로 올라와 있는지 병렬로 확인한다.
+    const availability = await Promise.all(
+      candidates.map((item) =>
+        tmdbFetch(`/${item.media_type}/${item.id}/watch/providers`)
+          .then((p) => (p.results?.[state.region]?.flatrate || []).some((pr) => pr.provider_id === NETFLIX_PROVIDER_ID))
+          .catch(() => false)
+      )
+    );
+
+    if (myToken !== searchToken) return; // 그 사이 검색어/조건이 또 바뀌었으면 이 결과는 버린다
+
+    state.searchResults = candidates.filter((_, i) => availability[i]);
+    showStatus("");
+  } catch (e) {
+    if (myToken !== searchToken) return;
+    if (e.code === "UNAUTHORIZED") {
+      openApiKeyModal("키가 만료되었거나 올바르지 않습니다. 다시 입력해주세요.");
+    }
+    showStatus(`${ui("listLoadFailed")}: ${e.message}`);
+    state.searchResults = [];
+  }
+
+  if (myToken !== searchToken) return;
+  state.searching = false;
+  render();
+}
+
+let searchDebounceTimer = null;
+
+function scheduleSearch(query) {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => runSearch(query), 450);
+}
+
+// 검색 중이 아닐 때(검색창이 비었을 때) 카테고리 화면으로 되돌리기 위해 호출.
+function clearSearch() {
+  searchToken++; // 진행 중이던 검색 요청은 무시하도록
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  state.query = "";
+  state.searching = false;
+  state.searchResults = [];
+  els.searchInput.value = "";
+}
+
 // ---------- 렌더링 ----------
 
 function getFiltered() {
-  if (!state.query) return state.items;
-  const q = state.query.toLowerCase();
-  return state.items.filter((item) => {
-    const title = (item.title || item.name || "").toLowerCase();
-    const overview = (item.overview || "").toLowerCase();
-    return title.includes(q) || overview.includes(q);
-  });
+  return state.query ? state.searchResults : state.items;
 }
 
 function posterBlock(item) {
@@ -992,9 +1079,11 @@ function resultCountLabel(filteredCount) {
 
 function render() {
   const filtered = getFiltered();
-  els.resultCount.textContent = state.items.length ? resultCountLabel(filtered.length) : "";
+  const busy = state.loading || state.searching;
+  els.resultCount.textContent =
+    state.query || state.items.length ? (busy && state.query ? "" : resultCountLabel(filtered.length)) : "";
   els.grid.innerHTML = "";
-  els.emptyMsg.hidden = state.loading || filtered.length !== 0;
+  els.emptyMsg.hidden = busy || filtered.length !== 0;
   els.loadMoreBtn.hidden = state.query !== "" || !state.hasMore;
 
   filtered.forEach((item) => {
@@ -1127,8 +1216,20 @@ document.addEventListener("keydown", (e) => {
 });
 
 els.searchInput.addEventListener("input", (e) => {
-  state.query = e.target.value.trim();
-  render();
+  const value = e.target.value.trim();
+  state.query = value;
+  searchToken++; // 아직 디바운스 중인 이전 검색이 있다면 결과를 무시하게 한다
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  if (!value) {
+    state.searching = false;
+    state.searchResults = [];
+    showStatus("");
+    render();
+    return;
+  }
+  state.searching = true;
+  render(); // 검색어가 있다는 것만 즉시 반영(카운트/그리드는 결과 도착 후 갱신)
+  scheduleSearch(value);
 });
 
 els.loadMoreBtn.addEventListener("click", () => {
